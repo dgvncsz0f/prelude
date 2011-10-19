@@ -15,7 +15,7 @@ PRELUDE
 
   A simple example, suppose you want to display a dialog with some information when the user clicks on a link. With prelude, and jQuery, the following code does this:
 
-  #+begin_example
+  #+begin_src html
     <html>
     <body>
       <!-- 
@@ -34,7 +34,7 @@ PRELUDE
         });
       </script>
     </body>
-  #+end_example
+  #+end_src
 
   Assuming your ~/server/action~ responds properly you should be able to see a dialog in your page. Prelude, with eithers CORS or server support is able to perform /cross domain/ ajax requests, but this depends on providing the proper plumbing. Another important aspect of prelude is that it handles submit events automatically.
 
