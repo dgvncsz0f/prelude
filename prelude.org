@@ -11,24 +11,6 @@ PRELUDE
 
   N.B. There is also some widgets plumbing, which one may say, /correctly/, it shouldn't be part of prelude. That is true, we will ship it separately. Another idea is also ship this as a jQuery plugin.
 
-* TODO IE submit bubbling
-
-* TODO Proxy implementation
-
-* TODO Creating jquery plugin
-
-* TODO Splitting widget and prelude code
-
-* TODO Creating gem for use with rails
-
-* TODO Security aspects
-
-* TODO Customize backend of prelude
-
-* TODO Provide api to invoke dialog and render on the client side
-
-* TODO Live example
-
 * Hands on
 
   A simple example, suppose you want to display a dialog with some information when the user clicks on a link. With prelude, and jQuery, the following code does this:
@@ -70,3 +52,22 @@ PRELUDE
 * License
 
   BSD3
+* TODOS
+** TODO IE submit bubbling
+
+** TODO Proxy implementation
+
+** TODO Creating jquery plugin
+
+** TODO Splitting widget and prelude code
+
+** TODO Creating gem for use with rails
+
+** TODO Security aspects
+
+** TODO Customize backend of prelude
+
+** TODO Provide api to invoke dialog and render on the client side
+
+** TODO Live example
+
