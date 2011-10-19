@@ -1,0 +1,75 @@
+#+begin_example
+  ┏━┓┏━┓┏━╸╻  ╻ ╻╺┳┓┏━╸
+  ┣━┛┣┳┛┣╸ ┃  ┃ ┃ ┃┃┣╸ 
+  ╹  ╹┗╸┗━╸┗━╸┗━┛╺┻┛┗━╸
+#+end_example
+
+* Introduction
+
+  Prelude follows the principle of Facebook's primer javascript API. By mapping user interactions patterns is helping us boost most of the site functionality with minimum javascript development, as we can generalize most of them.
+
+  There are probably much overlapping with the Facebook's primer API. The main difference is that we use jQuery underneath while they are using Haste + Bootloader.
+
+  If you know primer library, there won't be much news here, other than using jQuery underneath. The purposes, therefore, is not reduce javascript size to the minimum possible, but to reduce greatly development time/cost.
+
+  N.B. There is also some widgets plumbing, which one may say, /correctly/, it shouldn't be part of prelude. That is true, we will ship it separately. Another idea is also ship this as a jQuery plugin.
+
+* TODO IE submit bubbling
+
+* TODO Proxy implementation
+
+* TODO Creating jquery plugin
+
+* TODO Splitting widget and prelude code
+
+* TODO Creating gem for use with rails
+
+* TODO Security aspects
+
+* TODO Customize backend of prelude
+
+* TODO Provide api to invoke dialog and render on the client side
+
+* TODO Live example
+
+* Hands on
+
+  A simple example, suppose you want to display a dialog with some information when the user clicks on a link. With prelude, and jQuery, the following code does this:
+
+  #+begin_src html
+    <html>
+    <body>
+      <!-- 
+           /server/action needs to respond this:
+           { "content-type": "dialog", content: "...", title: "" }
+      -->
+      <a href="/server/action" data-prelude="on">Click me!</a>
+    
+      <script src="jquery.js"></script>
+      <script src="jquery.ui.js"></script>
+      <script src="prelude.js"></script>
+      <script>
+        jQuery(document.body).read(function () {
+          var body = jQuery(this);
+          PRELUDE.deploy(root);
+        });
+      </script>
+    </body>
+    
+  #+end_src
+
+  Assuming your ~/server/action~ responds properly you should be able to see a dialog in your page. Prelude, with eithers CORS or server support is able to perform /cross domain/ ajax requests, but this depends on providing the proper plumbing. Another important aspect of prelude is that it handles submit events automatically.
+
+  In the above example notice the ~data-prelude~ attribute, plus pay attention to the response the server must issue. The first is intended to you selectively decide on what tags prelude should act on. The server reply tells to the interface what to do. It is a kind of json-rpc protocol, that allows the server to explicitly control the widgets on the client.
+
+* Contributors
+
+  I'd like to thank Paulo Ahagon and David Paniz for helping me with the implementation.
+
+* Should I use it?
+
+  Probably not. Besides, this is the result of a day of work. However, the idea is great, and that is something you should consider. In near future, when the lib is a bit more polished it may be useful to others, but currently it will probably require a lot of hacking to get it working.
+
+* License
+
+  BSD3
