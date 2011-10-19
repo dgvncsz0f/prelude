@@ -1,3 +1,6 @@
+# N.B.: Github does not render org-mode. This is an .org file. You
+#       better read the raw format.
+
 #+begin_example
   ┏━┓┏━┓┏━╸╻  ╻ ╻╺┳┓┏━╸
   ┣━┛┣┳┛┣╸ ┃  ┃ ┃ ┃┃┣╸ 
