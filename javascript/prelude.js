@@ -29,7 +29,7 @@ var PRELUDE = (function () {
   var my_jQuery = jQuery;
 
   /* Defines internal parameters of the prelude class. Currently these
-   * are defined:
+   * are available:
    *
    *   jQuery: the jQuery object to use;
    */
@@ -212,7 +212,7 @@ var PRELUDE = (function () {
     }
     for (var s in w.imports.stylesheets) {
       if (w.imports.stylesheets.hasOwnProperty(s)) {
-        load_stylesheet(s);
+        load_stylesheet(w.imports.stylesheets[s]);
       }
     }
   };

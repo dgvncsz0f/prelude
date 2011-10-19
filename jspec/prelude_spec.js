@@ -151,7 +151,8 @@ describe("PRELUDE.load_widget", function () {
     widget.imports.stylesheets.push("/bar/foo.css");
     var target = jQuery("<div>");
     prelude.load_widget(widget, target);
-    expect(jQuery("link").length).toBe(2);
+    expect(jQuery("link:first").attr("href")).toBe("/foo/bar.css");
+    expect(jQuery("link:last").attr("href")).toBe("/bar/foo.css");
   });
 
 });
