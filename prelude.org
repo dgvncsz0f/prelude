@@ -1,6 +1,4 @@
-  ┏━┓┏━┓┏━╸╻  ╻ ╻╺┳┓┏━╸
-  ┣━┛┣┳┛┣╸ ┃  ┃ ┃ ┃┃┣╸ 
-  ╹  ╹┗╸┗━╸┗━╸┗━┛╺┻┛┗━╸
+PRELUDE
 #+OPTIONS: toc:nil num:t
 
 * Introduction
