@@ -42,11 +42,11 @@ PRELUDE
 
 * Contributors
 
-  I'd like to thank Paulo Ahagon and David Paniz for helping me with the implementation.
+  I'd like to thank both Paulo Ahagon and David Paniz for helping with the implementation.
 
 * Should I use it?
 
-  Probably not. Besides, this is the result of a day of work. However, the idea is great, and that is something you should consider. In near future, when the lib is a bit more polished it may be useful to others, but currently it will probably require a lot of hacking to get it working.
+  Probably not. Besides, this is pretty much the result of a day of work. In near future, when the lib is a bit more polished it may be useful to others, but currently it will probably require a lot of work/hacking to make it functional.
 
 * License
 
