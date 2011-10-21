@@ -36,7 +36,9 @@ describe("PRELUDE.event handling", function () {
     expect(jQuery.ajax).toHaveBeenCalledWith("/foo/bar", { method: "GET",
                                                            dataType: "json",
                                                            done: jasmine.any(Function),
-                                                           fail: jasmine.any(Function)
+                                                           fail: jasmine.any(Function),
+                                                           success: jasmine.any(Function),
+                                                           failure: jasmine.any(Function)
                                                          });
   });
 
@@ -70,7 +72,9 @@ describe("PRELUDE.event handling", function () {
                                                            data: form.serialize(),
                                                            dataType: "json",
                                                            done: jasmine.any(Function),
-                                                           fail: jasmine.any(Function)
+                                                           fail: jasmine.any(Function),
+                                                           success: jasmine.any(Function),
+                                                           failure: jasmine.any(Function)
                                                          });
   });
 
@@ -103,14 +107,20 @@ describe("PRELUDE.ajax", function () {
     spyOn(jQuery, "ajax");
     prelude.ajax("/foo/bar");
     expect(jQuery.ajax).toHaveBeenCalledWith("/foo/bar", { done: jasmine.any(Function),
-                                                           fail: jasmine.any(Function)
+                                                           fail: jasmine.any(Function),
+                                                           success: jasmine.any(Function),
+                                                           failure: jasmine.any(Function)
                                                          });
   });
 
   it("should not override handlers when they are defined", function () {
     spyOn(jQuery, "ajax");
     prelude.ajax("/foo/bar", { done: 1, fail: 2 });
-    expect(jQuery.ajax).toHaveBeenCalledWith("/foo/bar", { done: 1, fail: 2 });
+    expect(jQuery.ajax).toHaveBeenCalledWith("/foo/bar", { done: 1,
+                                                           fail: 2,
+                                                           success: 1,
+                                                           failure: 2
+                                                         });
   });
 
 });
@@ -157,3 +167,19 @@ describe("PRELUDE.load_widget", function () {
 
 });
 
+describe("signals and slots", function () {
+
+  beforeEach(function () {
+    prelude.clear_slots();
+  });
+
+  it("emit should notify listeners", function () {
+    var sentinel = false;
+    prelude.slot("foobar", function (e) {
+      sentinel = e;
+    });
+    prelude.emit("foobar", true);
+    expect(sentinel).toBe(true);
+  });
+
+});

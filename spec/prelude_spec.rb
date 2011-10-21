@@ -19,6 +19,14 @@ end
 
 describe :DialogType do
 
+  describe "initialize" do
+
+    it "should define content-type attribute" do
+      DialogType.new.dump.should == {"content-type" => "dialog"}
+    end
+
+  end
+
   describe "attributes" do
     
     it "should define attributes properly" do
@@ -34,15 +42,15 @@ describe :DialogType do
     end
 
     it "ok_button should change buttons list" do
-      @d.ok_button.dump.should == {:buttons => [{:ok => true, :text => "Ok"}]}
+      @d.ok_button.dump.should == {"content-type" => "dialog", :buttons => [{:ok => true, :text => "Ok"}]}
     end
 
     it "cancel_button should change buttons list" do
-      @d.cancel_button.dump.should == {:buttons => [{:cancel => true, :text => "Cancel"}]}
+      @d.cancel_button.dump.should == {"content-type" => "dialog", :buttons => [{:cancel => true, :text => "Cancel"}]}
     end
 
     it "action_button should change buttons list" do
-      @d.action_button("Foobar", "/foo/bar").dump.should == {:buttons => [{:action => "/foo/bar", :text => "Foobar"}]}
+      @d.action_button("Foobar", "/foo/bar").dump.should == {"content-type" => "dialog", :buttons => [{:action => "/foo/bar", :text => "Foobar"}]}
     end
 
   end
@@ -50,6 +58,14 @@ describe :DialogType do
 end
 
 describe :RenderType do
+
+  describe "initialize" do
+
+    it "should define content-type attribute" do
+      RenderType.new.dump.should == {"content-type" => "render"}
+    end
+
+  end
 
   describe "attributes" do
     

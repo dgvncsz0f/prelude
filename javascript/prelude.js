@@ -27,6 +27,7 @@ var jQuery;
 var PRELUDE = (function () {
 
   var my_jQuery = jQuery;
+  var ehandlers = {};
 
   /* Defines internal parameters of the prelude class. Currently these
    * are available:
@@ -61,20 +62,20 @@ var PRELUDE = (function () {
       }
     }
     
-    my_jQuery(html).dialog({ title: options.title,
+    my_jQuery(html).dialog({ title: options.request.title || options.title,
                              buttons: buttons
                            });
   };
 
   var render_handler = function (options) {
-    var target = my_jQuery(options.target);
+    var target = options.request.target || my_jQuery(options.target);
     if (target.length) {
       target.get(0).innerHTML = options.content;
     }
   };
 
-  var failure_handler = function () {
-    alert("Something went wrong.");
+  var failure_handler = function (xhr, status) {
+    emit("async.fail", status);
   };
  
   /* The output handler follows this protocol:
@@ -115,7 +116,11 @@ var PRELUDE = (function () {
   };
 
   var output_handler = function (json) {
+    if (json.request === undefined) {
+      json.request = {};
+    }
     action_lookup(json["content-type"])(json);
+    emit("async.done", json);
   };
 
   /* Performs an ajax request, using the default fail and failure
@@ -128,16 +133,59 @@ var PRELUDE = (function () {
     var options     = options0 || {};
     options.done = options.done || output_handler;
     options.fail = options.fail || failure_handler;
+    options.success = options.done;
+    options.failure = options.fail;
     return(my_jQuery.ajax(url, options));
+  };
+
+  /* Reads tags attributes, performing the ajax request and optionally
+   * defining the destination target for the result.
+   *
+   * The behavior depends on the tag name, roughly as follows:
+   *
+   *   + A: uses href attribute for URL and performs a GET request;
+   *
+   *   + FORM: uses action attribute for URL and uses method attribute
+   *   to define the HTTP method to use (defaults to POST);
+   *
+   *   + Others: uses data-href attribute for URL and data-method to
+   *   define the HTTP method to use (defaults to GET);
+   */
+  var tag_handler = function (src, dst) {
+    var tagname  = src.get(0).nodeName.toLowerCase();
+    var settings = (dst ? {target: dst} : {});
+    var mydone   = function (json) {
+      var args = Array.prototype.slice.call(arguments, 0);
+      json.request  = { target: dst,
+                        source: src
+                      };
+      output_handler.apply(this, args);
+    };
+    if (tagname === "a") {
+      ajax(src.attr("href"), { method: "GET",
+                               dataType: "json",
+                               done: mydone
+                             });
+    } else if (tagname === "form") {
+      ajax(src.attr("action"), { method: src.attr("method") || "GET",
+                                 data: src.serialize(),
+                                 dataType: "json",
+                                 done: mydone
+                               });
+    } else {
+      ajax(src.attr("data-href"), { method: src.attr("data-method") || "GET",
+                                    data: src.serialize(),
+                                    dataType: "json",
+                                    done: mydone
+                                  });
+    }
   };
 
   var link_handler = function (e) {
     if (e.target) {
       var target = my_jQuery(e.target);
       if (target.attr("data-prelude") === "on") {
-        ajax(target.attr("href"), { method: "GET",
-                                    dataType: "json",
-                                  });
+        tag_handler(target);
         e.preventDefault();
       }
     }
@@ -147,10 +195,7 @@ var PRELUDE = (function () {
     if (e.target) {
       var target = my_jQuery(e.target);
       if (target.attr("data-prelude") === "on") {
-        ajax(target.attr("action"), { method: target.attr("method") || "GET",
-                                      data: target.serialize(),
-                                      dataType: "json",
-                                    });
+        tag_handler(target);
         e.preventDefault();
       }
     }
@@ -160,10 +205,22 @@ var PRELUDE = (function () {
    * with data-prelude=on attribute will be handled. On those, the
    * event propagation will not stop but the default action is
    * prevented.
+   *
+   * The default is to listen for click and submit events.
+   *
+   * Alternatively, you may create tags with class="auto-async"
+   * attribute. On those, prelude invokes the tag_handler function
+   * automatically using that node as the target (for eventual render
+   * responses). You may use this to auto fetch content using the ajax
+   * mechanism provided by this library.
    */
   var deploy = function (root) {
     root.bind("submit", submit_handler);
     root.bind("click", link_handler);
+    root.find(".auto-async").each(function () {
+      var tag = my_jQuery(this);
+      tag_handler(tag, tag);
+    });
   };
 
   var load_content = function (c, target) {
@@ -215,12 +272,52 @@ var PRELUDE = (function () {
         load_stylesheet(w.imports.stylesheets[s]);
       }
     }
+
+    emit("widget", w);
   };
 
-  return({ "load_widget": load_widget,
+  var slot_autoasync = function (json) {
+    if (json.request.target && json.request.source) {
+      if (json.request.source.hasClass("auto-async")) {
+        json.request.target.find(".auto-async").each(function () {
+          var tag = my_jQuery(this);
+          tag_handler(tag, tag);
+        });
+      }
+    }
+  };
+
+  var emit = function (signal, e) {
+    var fs = ehandlers[signal] || [];
+    for (var k=0; k<fs.length; k+=1) {
+      fs[k](e);
+    }
+
+    // builtin handlers
+    if (signal === "async.done") {
+      slot_autoasync(e);
+    }
+  };
+
+  /* Listen for particular events. */
+  var slot = function (event, f) {
+    var fs = ehandlers[event] || [];
+    fs.push(f);
+    ehandlers[event] = fs;
+  };
+
+  var clear_slots = function () {
+    ehandlers = {};
+  };
+
+  return({ "set": set,
            "deploy": deploy,
-           "set": set,
-           "ajax": ajax
+           "ajax": ajax,
+           "load_widget": load_widget,
+           "tag_handler": tag_handler,
+           "slot": slot,
+           "emit": emit,
+           "clear_slots": clear_slots
          });
 })();
 

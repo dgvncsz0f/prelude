@@ -60,6 +60,14 @@ end
 
 class RenderType < BaseType
 
+  def initialize
+    super
+    attributes! do |attrs|
+      attrs["content-type"] = "render"
+      attrs
+    end
+  end
+
   def attributes
     [ :target, :content ]
   end
@@ -67,7 +75,15 @@ class RenderType < BaseType
 end
 
 class DialogType < BaseType
-  
+
+  def initialize
+    super
+    attributes! do |attrs|
+      attrs["content-type"] = "dialog"
+      attrs
+    end
+  end
+
   def attributes
     [ :title, :content ]
   end
