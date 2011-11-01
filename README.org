@@ -11,35 +11,6 @@ PRELUDE
 
   N.B. There is also some widgets plumbing, which one may say, /correctly/, it shouldn't be part of prelude. That is true, we will ship it separately. Another idea is also ship this as a jQuery plugin.
 
-* Hands on
-
-  A simple example, suppose you want to display a dialog with some information when the user clicks on a link. With prelude, and jQuery, the following code does this:
-
-  #+begin_src html
-    <html>
-    <body>
-      <!-- 
-           /server/action needs to respond this:
-           { "content-type": "dialog", content: "...", title: "" }
-      -->
-      <a href="/server/action" data-prelude="on">Click me!</a>
-    
-      <script src="jquery.js"></script>
-      <script src="jquery.ui.js"></script>
-      <script src="prelude.js"></script>
-      <script>
-        jQuery(document.body).read(function () {
-          var body = jQuery(this);
-          PRELUDE.deploy(root);
-        });
-      </script>
-    </body>
-  #+end_src
-
-  Assuming your ~/server/action~ responds properly you should be able to see a dialog in your page. Prelude, with eithers CORS or server support is able to perform /cross domain/ ajax requests, but this depends on providing the proper plumbing. Another important aspect of prelude is that it handles submit events automatically.
-
-  In the above example notice the ~data-prelude~ attribute, plus pay attention to the response the server must issue. The first is intended to you selectively decide on what tags prelude should act on. The server reply tells to the interface what to do. It is a kind of json-rpc protocol, that allows the server to explicitly control the widgets on the client.
-
 * Contributors
 
   I'd like to thank both Paulo Ahagon and David Paniz for helping with the implementation.

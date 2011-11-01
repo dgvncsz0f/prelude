@@ -8,8 +8,8 @@ describe("PRELUDE.deploy", function () {
     var tag = jQuery();
     spyOn(tag, "bind");
     prelude.deploy(tag);
-    expect(tag.bind).toHaveBeenCalledWith("submit", jasmine.any(Function))
-    expect(tag.bind).toHaveBeenCalledWith("click", jasmine.any(Function))
+    expect(tag.bind).toHaveBeenCalledWith("submit", jasmine.any(Function));
+    expect(tag.bind).toHaveBeenCalledWith("click", jasmine.any(Function));
   });
 
 });
@@ -38,7 +38,7 @@ describe("PRELUDE.event handling", function () {
                                                            done: jasmine.any(Function),
                                                            fail: jasmine.any(Function),
                                                            success: jasmine.any(Function),
-                                                           failure: jasmine.any(Function)
+                                                           error: jasmine.any(Function)
                                                          });
   });
 
@@ -74,7 +74,7 @@ describe("PRELUDE.event handling", function () {
                                                            done: jasmine.any(Function),
                                                            fail: jasmine.any(Function),
                                                            success: jasmine.any(Function),
-                                                           failure: jasmine.any(Function)
+                                                           error: jasmine.any(Function)
                                                          });
   });
 
@@ -109,7 +109,7 @@ describe("PRELUDE.ajax", function () {
     expect(jQuery.ajax).toHaveBeenCalledWith("/foo/bar", { done: jasmine.any(Function),
                                                            fail: jasmine.any(Function),
                                                            success: jasmine.any(Function),
-                                                           failure: jasmine.any(Function)
+                                                           error: jasmine.any(Function)
                                                          });
   });
 
@@ -119,7 +119,7 @@ describe("PRELUDE.ajax", function () {
     expect(jQuery.ajax).toHaveBeenCalledWith("/foo/bar", { done: 1,
                                                            fail: 2,
                                                            success: 1,
-                                                           failure: 2
+                                                           error: 2
                                                          });
   });
 

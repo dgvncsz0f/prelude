@@ -28,6 +28,7 @@ var PRELUDE = (function () {
 
   var my_jQuery = jQuery;
   var ehandlers = {};
+  var bhandlers = {};
 
   /* Defines internal parameters of the prelude class. Currently these
    * are available:
@@ -38,6 +39,32 @@ var PRELUDE = (function () {
     if (k === "jQuery") {
       my_jQuery = v;
     }
+  };
+
+  var emit_ = function(db, signal, e) {
+    var fs = db[signal] || [];
+    for (var k=0; k<fs.length; k+=1) {
+      fs[k](e);
+    }
+  };
+
+  var slot_ = function(db, event, f) {
+    var fs = db[event] || [];
+    fs.push(f);
+    db[event] = fs;
+  };
+
+  var emit = function (signal, e) {
+    emit_(bhandlers, signal, e);
+    emit_(ehandlers, signal, e);
+  };
+
+  var slot = function (event, f) {
+    slot_(ehandlers, event, f);
+  };
+
+  var clear_slots = function () {
+    ehandlers = {};
   };
 
   var dialog_handler = function (options) {
@@ -131,25 +158,15 @@ var PRELUDE = (function () {
    */
   var ajax = function (url, options0) {
     var options     = options0 || {};
-    options.done = options.done || output_handler;
-    options.fail = options.fail || failure_handler;
+    options.done    = options.done || output_handler;
+    options.fail    = options.fail || failure_handler;
     options.success = options.done;
-    options.failure = options.fail;
+    options.error   = options.fail;
     return(my_jQuery.ajax(url, options));
   };
 
   /* Reads tags attributes, performing the ajax request and optionally
    * defining the destination target for the result.
-   *
-   * The behavior depends on the tag name, roughly as follows:
-   *
-   *   + A: uses href attribute for URL and performs a GET request;
-   *
-   *   + FORM: uses action attribute for URL and uses method attribute
-   *   to define the HTTP method to use (defaults to POST);
-   *
-   *   + Others: uses data-href attribute for URL and data-method to
-   *   define the HTTP method to use (defaults to GET);
    */
   var tag_handler = function (src, dst) {
     var tagname  = src.get(0).nodeName.toLowerCase();
@@ -205,14 +222,6 @@ var PRELUDE = (function () {
    * with data-prelude=on attribute will be handled. On those, the
    * event propagation will not stop but the default action is
    * prevented.
-   *
-   * The default is to listen for click and submit events.
-   *
-   * Alternatively, you may create tags with class="auto-async"
-   * attribute. On those, prelude invokes the tag_handler function
-   * automatically using that node as the target (for eventual render
-   * responses). You may use this to auto fetch content using the ajax
-   * mechanism provided by this library.
    */
   var deploy = function (root) {
     root.bind("submit", submit_handler);
@@ -276,10 +285,11 @@ var PRELUDE = (function () {
     emit("widget", w);
   };
 
-  var slot_autoasync = function (json) {
+  var autoasync = function (json) {
     if (json.request.target && json.request.source) {
       if (json.request.source.hasClass("auto-async")) {
         json.request.target.find(".auto-async").each(function () {
+
           var tag = my_jQuery(this);
           tag_handler(tag, tag);
         });
@@ -287,28 +297,7 @@ var PRELUDE = (function () {
     }
   };
 
-  var emit = function (signal, e) {
-    var fs = ehandlers[signal] || [];
-    for (var k=0; k<fs.length; k+=1) {
-      fs[k](e);
-    }
-
-    // builtin handlers
-    if (signal === "async.done") {
-      slot_autoasync(e);
-    }
-  };
-
-  /* Listen for particular events. */
-  var slot = function (event, f) {
-    var fs = ehandlers[event] || [];
-    fs.push(f);
-    ehandlers[event] = fs;
-  };
-
-  var clear_slots = function () {
-    ehandlers = {};
-  };
+  slot_(bhandlers, "async.done", autoasync);
 
   return({ "set": set,
            "deploy": deploy,
