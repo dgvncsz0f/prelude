@@ -1,0 +1,190 @@
+#+TITLE:     prelude
+#+AUTHOR:    dsouza
+#+EMAIL:     dsouza+prelude@bitforest.org
+#+LANGUAGE:  pt
+
+* Prelude
+
+  /Prelude/ é uma biblioteca /javascript/ que inspira-se nos conceitos da /API/ do Facebook, conhecida como /primer/. Sua proposta é acelerar o desenvolvimento identificando padrões de interação afim de reduzir a quantidade de código necessária.
+
+  Este documento fornece uma referência à esta /API/.
+
+** Guia do Desenvolvedor
+
+   Para usar a biblioteca, após carregar o código /javascript/, é necessário ativá-lo. É possível ativá-lo em qualquer elemento, e, portanto, é possível manter várias instâncias concorrentemente. Entretanto, há de se garantir que não haverá intersecção entre as instâncias. A seguir um exemplo de como executar a ativação:
+
+   #+begin_src javascript
+     var prelude = PRELUDE.deploy("main", jQuery(document.root));
+     // var prelude = PRELUDE.instances["main"];
+   #+end_src
+
+   No código acima, o primeiro argumento é o /namespace/. Usado para obter acesso à esta instância específica. Após feito isto, a biblioteca está ativada e pronta para ser usada.
+
+*** Ações automáticas
+
+    Algumas ações são executadas automaticamente, e isto é um dos principais aspectos do /Prelude/. Entretanto, nada é feito implicitamente, em outras palavras, é necessário ativar explicitamente esta função. A seguir, listaremos tais ações:
+
+**** Links
+
+     Todo elemento ~A~ que possuir um atributo ~data-prelude~ contendo o valor ~on~ está sujeita à ação automática. No momento do evento de /click/, este evento será capturado e a ação padrão será cancelada. A seguir, uma requisição /ajax/ será feita para a /URL/ definida pelo atributo ~href~ e o resultado é esperado que seja uma resposta válida (mais sobre este protocolo a seguir).
+
+     O seguinte código /HTML/ exemplifica o parágrafo acima:
+
+     #+begin_src html
+       <a href="/foo/bar.json" data-prelude="on">Click me!</a>
+     #+end_src
+
+**** Forms
+
+     Assim como elementos ~A~, os elementos ~FORM~ também podem ser manipulados automaticamente. A mecânica é muito similar, bastando para tal adicionar o atributo ~data-prelude="on"~, como no exemplo a seguir:
+
+     #+begin_src html
+       <form action="/foo/bar.json" method="POST" data-prelude="on">
+         <input type="text" name="q" />
+         <input type="submit" />
+       </form>
+     #+end_src
+
+     Como era de se esperar, o /FORM/ é /serializado/ (usando-se ~jQuery.serialize~) e enviado para a /URL/ definida pelo atributo ~action~. O atributo ~method~ também é utilizado, que define o método /HTTP/ que deve ser utilizado.
+
+     Novamente, espera-se que a resposta seja uma resposta válida.
+
+**** Auto Load
+
+     Há casos em que se deseja postergar o carregamento de certos trechos do código /HTML/. Como exemplo, suponha que algum componente secundário leve algum tempo para ficar pronto, mas todo o resto da página pode ser renderizado rapidamente. Uma solução, supondo que a otimização de tal componente não seja factível, seria tornar este componente assíncrono. /Prelude/ tenta facilitar esta tarefa através do mecanismo autodenominado de /auto-async/.
+
+     Pragmaticamente, não difere muito dos casos acima, exceto que um atributo ~class~ precisa estar presente. A /tag/ que deseja-se tornar o carregamento assíncrono necessita possuir uma classe ~auto-async~, e um atributo ~data-href~. Com isto é possível utilizar automatizar o carregamento de seções da página, como a seguir:
+
+     #+begin_src html
+       <div class="auto-asyn" data-href="/foo/bar.json">
+       </div>
+     #+end_src
+
+     Quando o /DOM/ estiver preparado, /Prelude/ fará uma requisição para este recurso e o resultado será inserido na /tag/ que originou a requisição.
+
+*** Eventos
+
+    /Prelude/ expões uma /API/ simples de notificação, que é usada internamente mas pode também ser usada para notificar partes interessadas sobre eventos ocorridos internamente. Notadamente, os seguintes eventos estão disponíveis:
+
+    * ~widget-load(Event, Widget)~: Emitido quando um novo /widget/ é carregado;
+      
+    * ~async-done(Event, Json)~: Emitido quando uma requisição ajax é concluída com sucesso;
+
+    * ~async-fail(Event, Status)~: Emitido quando ocorre algum erro em uma requisição ajax;
+
+    /Prelude/ faz uso do método ~trigger~ do /jQuery/ para notificar sobre os eventos. Portanto, o primeiro elemento é um objeto do tipo event, conforme definido na documentação oficial do /jQuery/.
+
+*** Protocolo
+
+    É esperado que uma requisição ajax feita automaticamente pelo prelude responda um protocolo específico. Desta forma, é possível inverter o controle da aplicação para o servidor. Em outras palavras, o servidor decide como modificar o /DOM/, através deste protocolo.
+
+    Atualmente o protocolo é bem simples e suporta poucos tipos de resposta. Entretanto isto poderia aumentar conforme outros tipos de resposta são mapeados durante o desenvolvimento.
+
+    O protocolo, em termos gerais é definido como a seguir:
+
+    #+begin_src javascript
+      { "content-type": TYPE,
+        TYPE-ARGUMENTS
+      }
+    #+end_src
+
+    Este é a forma geral da resposta. Cada ~TYPE~ específico determina os argumentos necessários para execução, como detalhado a seguir.
+
+**** Render
+
+     Este tipo modifica o /DOM/. Seus argumentos são:
+
+     * content: Código /HTML/ a ser inserido;
+
+     * target: /jQuery selector/ da /tag/ na qual o conteúdo HTML será inserido;
+
+     Exemplificando:
+
+     #+begin_src javascript
+       { "content-type": "render",
+         "content": "<a href=\"http://google.com/\">Click me!</a>"
+         "target": "#some-target"
+       }
+     #+end_src
+
+**** Dialog
+
+     Este exibe um dialog para o usuário. Geralmente alguma informação, ou mensagem de erro:
+
+     * content: Mensagem a ser exibida (geralmente algum código /HTML/);
+
+     * title: Título do /dialog/;
+
+     * buttons: Uma lista de objetos contendo ~text~ e um dos seguintes atributos: ~ok~, ~cancel~, ou ~action~. O último é uma ~URL~ que será requisitada caso o usuário clique neste botão (será uma chamada /ajax/ do prelude).
+
+     Exemplificando:
+
+     #+begin_src javascript
+       { "content-type": "dialog",
+         "content": "Foobar is not the same as foobaz!",
+         "title": "Did you know?",
+         "buttons": [{title:"Ok", ok:true}]
+       }
+     #+end_src
+
+**** Chain
+
+     TODO:fixme
+
+*** Widgets
+
+    /Widget/ é um mecanismo para embutir código em aplicações. Como exemplo, imagine /widgets/ como por exemplo um cliente /jabber/ que deseja-se incluir em um site qualquer.
+
+    Da maneira como foi construída, /widgets/ apenas necessitam de tecnologias padrão já disponíveis para o usuário: /HTML/, /CSS/ e /Javascript/. Mas antes de começar, é importante apresentar o ambiente com o qual é possível testar os exemplos neste documento além de usá-lo como ambiente de desenvolvimento:
+
+    http://tryprelude.bitforest.org/
+
+    Este ambiente permite você testar seus /widgets/ e verificar se estão funcionando propriamente. Além disso os exemplos neste documento também estarão disponíveis nesta URL.
+
+**** Descrição do Widget
+
+     A descrição do /widget/ é um objeto /javascript/ com os seguintes atributos:
+
+     * content:
+
+       * html: Código HTML do /widget/ a ser renderizado;
+
+     * imports:
+
+       * javascripts: Lista de /URLs/ dos /javascripts/ necessários a este /widget/. Note que estes serão carregados em uma ordem não definida.
+
+       * stylesheets: Lista de /URLs/ de /CSS/ necessários a este /widget/. Novamente, a ordem com a qual as /URLs/ são carregadas não é definida.
+
+     Isto define um /widget/. A seguir, um exemplo de um /widget/ que renderiza um link:
+
+     #+begin_src javascript
+       { "content": { "html": "<a href=\\"http://foo.bar/\\">Click me!</a>"
+                    },
+         "imports": { "stylesheets": [],
+                      "javascripts": []
+                    }
+       }
+     #+end_src
+
+**** Exemplos
+
+     Criamos dois exemplos. O primeiro simplesmente renderiza um link. O segundo, um pouco mais avançado, faz uso do recurso de /auto-async/, além de requerer /javascripts/ e /stylesheets/ adicionais. Para testá-los, utilize a seguinte /URL/:
+
+     * http://tryprelude.bitforest.org/cgi-bin/widgets-1.py
+
+     * http://tryprelude.bitforest.org/cgi-bin/widgets-2.py
+
+** Referência
+
+   |-----------+------------------------------------------------------|
+   | Eventos   | widget-load, async-done, async-fail                  |
+   |-----------+------------------------------------------------------|
+   | Auto-load | ~<a data-prelude="on" href="...">~                   |
+   |           | ~<form data-prelude="on" action="..." method="...">~ |
+   |           | ~<tag class="auto-async" data-href="...">~           |
+   |-----------+------------------------------------------------------|
+   | Widgets   | ~{~                                                  |
+   |           | ~content: {html:""}~                                 |
+   |           | ~imports: {javascripts:[...], stylesheets:[...]}~    |
+   |           | ~}~                                                  |
+   |-----------+------------------------------------------------------|

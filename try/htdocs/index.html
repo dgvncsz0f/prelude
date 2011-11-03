@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+    <title>Try Prelude!</title>
+  </head>
+  <body>
+    <h2>Deploy!</h2>
+    <form id="deploy-form" action="#install-form">
+      <label for="widget-url">Widget url:</label>
+      <input type="text" name="widget-url" id="widget-url" />
+      <input type="submit" value="Try!"></input>
+    </form>
+
+    <h2>Widget</h2>
+    <div id="prelude">
+    </div>
+    <script type="text/javascript" src="http://code.jquery.com/jquery-1.6.4.min.js"></script>
+    <script type="text/javascript" src="/javascripts/prelude.js"></script>
+    <script type="text/javascript">
+      jQuery(document.body).ready(function () {
+        var $prelude = jQuery("#prelude");
+        var prelude  = PRELUDE.deploy("main", $prelude);
+        jQuery("#deploy-form").bind("submit", function (e) {
+          if (e.target !== undefined) {
+            var url = jQuery("#widget-url").val();
+            jQuery.ajax(url, { method: "GET",
+                               dataType: "jsonp",
+                               success: function (w) {
+                                 prelude.load_widget(w, $prelude);
+                               }
+                             });
+
+          }
+          e.preventDefault();
+          e.stopPropagation();
+        });
+      });
+    </script>
+  </body>
+</html>

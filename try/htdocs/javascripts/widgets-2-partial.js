@@ -1,0 +1,1 @@
+{"content-type":"render","content":"<a href=\"http://google.com/\" id=\"widgets-2-link\">Click me!</a>"}
