@@ -4,9 +4,9 @@ var WIDGETS2 = (function () {
       var target = jQuery(e.target);
       if (target.attr("id") === "widgets-2-link") {
         alert(target.attr("href"));
-        e.preventDefault();
       }
     }
+    e.preventDefault();
   });
 
   return({});

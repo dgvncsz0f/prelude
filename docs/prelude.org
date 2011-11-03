@@ -1,7 +1,5 @@
-#+TITLE:     prelude
-#+AUTHOR:    dsouza
-#+EMAIL:     dsouza+prelude@bitforest.org
-#+LANGUAGE:  pt
+#+TITLE:     Prelude
+#+AUTHOR:
 
 * Prelude
 
