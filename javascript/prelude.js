@@ -26,7 +26,8 @@
 var jQuery;
 var PRELUDE = (function () {
   var new_instance = function (root) {
-    var my_jQuery = jQuery;
+    var my_jQuery   = jQuery;
+    var c_handlers  = {};
     var core_events = { "async_done": [],
                         "async_fail": [],
                         "widget_load": []
@@ -55,37 +56,20 @@ var PRELUDE = (function () {
       root.bind(signal, f);
     };
 
-    var dialog_handler = function (options) {
-      var html = my_jQuery("<div>");
-      html.get(0).innerHTML = options.content;
-
-      var buttons = [];
-      for (var b in options.buttons) {
-        if (options.buttons.hasOwnProperty(b)) {
-          buttons.push({ text: b.text,
-                         click: function () {
-                           if (b.cancel || b.ok) {
-                             my_jQuery(this).dialog("close");
-                           } else if (b.action) {
-                             ajax(b.action, { method: "POST",
-                                              data: my_jQuery(this).serialize(),
-                                              dataType: "json",
-                                            });
-                           }
-                         }
-                       });
-        }
-      }
-      
-      my_jQuery(html).dialog({ title: options.request.title || options.title,
-                               buttons: buttons
-                             });
-    };
-
     var render_handler = function (options) {
       var target = options.request.target || my_jQuery(options.target);
       if (target.length) {
         target.get(0).innerHTML = options.content;
+      }
+    };
+
+    var sequence_handler = function (options, cc) {
+      for (var rsp in options.sequence) {
+        if (options.sequece.hasOwnProperty(rsp)) {
+          var seqitem = options.sequece[rsp];
+          seqitem.request = options.request;
+          cc(seqitem);
+        }
       }
     };
 
@@ -95,46 +79,37 @@ var PRELUDE = (function () {
     
     /* The output handler follows this protocol:
      *
-     *  - content-type: Either dialog or render;
+     *  - content-type: Either render, sequence or a custom handler registered;
      *  
-     *  Options for dialog:
-     * 
-     *    - title: Pretty obvious;
-     * 
-     *    - buttons: An array of objects with the `text' of the button
-     *               and the type of button. The type might be one of:
-     *               ok, cancel or action. The later takes an URL that
-     *               will receive a POST request with the contents of
-     *               the dialog serialized;
-     *
-     *    - content: The HTML content to be shown;
-     *
-     *
      *  Options for render:
      *
      *    - target: A CSS locator of the tag that this content should be put into;
      *
      *    - content: The HTML content to be shown;
+     * 
+     *  Options for sequence:
+     *
+     *    - sequece: A list of actions to execute (any of the types above);
      *
      *  Examples:
      *
      *    { "content-type": "render", target: "#foobar", content: "it works!" }
      */
     var action_lookup = function (type) {
-      if (type === "dialog") {
-        return(dialog_handler);
-      } else if (type === "render") {
+      if (type === "render") {
         return(render_handler);
+      } else if (type === "sequence") {
+        return(sequence_handler);
       } else {
-        return(failure_handler);
+        return(c_handlers[type] || failure_handler);
       }
     };
 
-    var output_handler = function (json) {
+    var response_handler = function (json) {
       if (json.request === undefined) {
         json.request = {};
       }
-      action_lookup(json["content-type"])(json);
+      action_lookup(json["content-type"])(json, response_handler);
       emit("async_done", [json]);
     };
 
@@ -146,7 +121,7 @@ var PRELUDE = (function () {
      */
     var ajax = function (url, options0) {
       var options     = options0 || {};
-      options.done    = options.done || output_handler;
+      options.done    = options.done || response_handler;
       options.fail    = options.fail || failure_handler;
       options.success = options.done;
       options.error   = options.fail;
@@ -164,21 +139,21 @@ var PRELUDE = (function () {
         json.request  = { target: dst,
                           source: src
                         };
-        output_handler.apply(this, args);
+        response_handler.apply(this, args);
       };
       if (tagname === "a") {
-        ajax(src.attr("href"), { method: "GET",
+        ajax(src.attr("href"), { type: "GET",
                                  dataType: "json",
                                  done: mydone
                                });
       } else if (tagname === "form") {
-        ajax(src.attr("action"), { method: src.attr("method") || "GET",
+        ajax(src.attr("action"), { type: src.attr("method") || "GET",
                                    data: src.serialize(),
                                    dataType: "json",
                                    done: mydone
                                  });
       } else {
-        ajax(src.attr("data-href"), { method: src.attr("data-method") || "GET",
+        ajax(src.attr("data-href"), { type: src.attr("data-method") || "GET",
                                       data: src.serialize(),
                                       dataType: "json",
                                       done: mydone
@@ -204,6 +179,17 @@ var PRELUDE = (function () {
           e.preventDefault();
         }
       }
+    };
+
+    /* Registers a new output handler. Output handlers are responsible
+     * for processing server responses in a reply of a ajax request
+     * done by prelude.
+     */
+    var register_rsphandler = function (name, f) {
+      if (c_handlers[name] !== undefined) {
+        throw("there is handler already for: "+ name);
+      }
+      c_handlers[name] = f;
     };
 
     var load_content = function (c, target) {
@@ -289,6 +275,8 @@ var PRELUDE = (function () {
              "tag_handler": tag_handler,
              "slot": slot,
              "emit": emit,
+             "register_rsphandler": register_rsphandler,
+             "response_handler": response_handler
            });
   };
 
@@ -304,8 +292,12 @@ var PRELUDE = (function () {
     return(instances[name]);
   };
 
+  var instance = function (x) {
+    return(instances[x]);
+  };
+
   return({ "deploy": deploy,
-           "instances": instances
+           "instance": instance
          });
 
 })();

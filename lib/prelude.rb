@@ -74,55 +74,51 @@ class RenderType < BaseType
 
 end
 
-class DialogType < BaseType
+class SequeceType < BaseType
 
   def initialize
     super
     attributes! do |attrs|
-      attrs["content-type"] = "dialog"
+      attrs["content-type"] = "sequence"
       attrs
     end
   end
 
   def attributes
-    [ :title, :content ]
+    [ :sequence ]
   end
 
-  def ok_button(text="Ok")
+  def chain(action)
     attributes! do |attrs|
-      buttons = attrs[:buttons] || []
-      buttons << { :text => text,
-                   :ok   => true
-                 }
-      attrs[:buttons] = buttons
+      sequence = attrs[:sequence] || []
+      sequence << action
+      attrs[:sequence] = sequence
       attrs
     end
-    self
   end
 
-  def cancel_button(text="Cancel")
+end
+
+class CustomType < BaseType
+
+  def initialize(type)
+    super
     attributes! do |attrs|
-      buttons = attrs[:buttons] || []
-      buttons << { :text   => text,
-                   :cancel => true
-                 }
-      attrs[:buttons] = buttons
+      attrs["content-type"] = type
       attrs
     end
-    self
   end
 
-  def action_button(text, action)
-    attributes! do |attrs|
-      buttons = attrs[:buttons] || []
-      buttons << { :text   => text,
-                   :action => action,
-                 }
-      attrs[:buttons] = buttons
-      attrs
-    end
-    self
+  def method_missing(name, *value, &proc)
+    symname = name.to_sym
+    @json[symname] = value.first
+    return(self)
   end
+
+  def respond_to?(name)
+    true
+  end
+
 
 end
 
@@ -133,6 +129,8 @@ end
 #
 #   * :render 
 #   * :dialog
+#   * :sequence
+#   * :custom
 #
 # In order to know what attributes each support, refer to prelude.js
 # file which describes the protocol and should be used as source of
@@ -141,9 +139,9 @@ def prelude_type(t)
   case t
     when :render
       RenderType.new
-    when :dialog
-      DialogType.new
+    when :sequence
+      SequenceType.new
     else
-      raise("unsupported prelude content-type")
+      CustomType.new(t)
   end
 end
