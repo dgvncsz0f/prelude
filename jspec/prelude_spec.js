@@ -31,6 +31,31 @@ describe("PRELUDE", function () {
 
   });
 
+  describe("PRELUDE.undeploy", function () {
+
+    it("should remove all event handlers", function () {
+      instance.slot("foobar", function () {
+        expect(true).toBe(false);
+      });
+      instance.undeploy();
+      instance.emit("foobar");
+    });
+
+    it("should not handle click events", function () {
+      var evt  = jQuery.Event("click");
+      var atag = jQuery("<a>foo</a>");
+      atag.attr("href", "/foo/bar");
+      atag.attr("data-prelude", "on");
+      body.append(atag);
+      spyOn(jQuery, "ajax");
+      instance.undeploy();
+      atag.trigger(evt);
+      expect(evt.isDefaultPrevented()).toBe(false);
+      expect(jQuery.ajax).not.toHaveBeenCalled();
+    });
+
+  });
+
   describe("PRELUDE.event handling", function () {
 
     it("should handle click events that contains data-prelude=on", function () {

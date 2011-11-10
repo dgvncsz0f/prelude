@@ -38,7 +38,7 @@ var PRELUDE = (function () {
     }
   };
 
-  var new_instance = function (root) {
+  var new_instance = function (name, root) {
     var c_handlers  = {};
     var core_events = { "async_done": [],
                         "async_fail": [],
@@ -106,11 +106,11 @@ var PRELUDE = (function () {
       }
     };
 
-    var response_handler = function (json) {
+    var handle_response = function (json) {
       if (json.request === undefined) {
         json.request = {};
       }
-      action_lookup(json["content-type"])(json, response_handler);
+      action_lookup(json["content-type"])(json, handle_response);
       emit("async_done", [json]);
     };
 
@@ -122,7 +122,7 @@ var PRELUDE = (function () {
      */
     var ajax = function (url, options0) {
       var options     = options0 || {};
-      options.done    = options.done || response_handler;
+      options.done    = options.done || handle_response;
       options.fail    = options.fail || failure_handler;
       options.success = options.done;
       options.error   = options.fail;
@@ -140,7 +140,7 @@ var PRELUDE = (function () {
         json.request  = { target: dst,
                           source: src
                         };
-        response_handler.apply(this, args);
+        handle_response.apply(this, args);
       };
       if (tagname === "a") {
         ajax(src.attr("href"), { type: "GET",
@@ -186,7 +186,7 @@ var PRELUDE = (function () {
      * for processing server responses in a reply of a ajax request
      * done by prelude.
      */
-    var register_rsphandler = function (name, f) {
+    var register_rhandler = function (name, f) {
       if (c_handlers[name] !== undefined) {
         throw("there is handler already for: "+ name);
       }
@@ -248,6 +248,7 @@ var PRELUDE = (function () {
 
     var undeploy = function () {
       root.unbind(".prelude");
+      delete(instances[name]);
     };
 
     // core event handlers
@@ -279,8 +280,8 @@ var PRELUDE = (function () {
              "tag_handler": tag_handler,
              "slot": slot,
              "emit": emit,
-             "register_rsphandler": register_rsphandler,
-             "response_handler": response_handler
+             "register_rhandler": register_rhandler,
+             "handle_response": handle_response
            });
   };
 
@@ -292,7 +293,7 @@ var PRELUDE = (function () {
    * prevented.
    */
   var deploy = function (name, root) {
-    instances[name] = new_instance(root);
+    instances[name] = new_instance(name, root);
     return(instances[name]);
   };
 
