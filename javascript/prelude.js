@@ -25,24 +25,25 @@
 
 var jQuery;
 var PRELUDE = (function () {
+  var my_jQuery   = jQuery;
+
+  /* Defines internal parameters of the prelude class. Currently these
+   * are available:
+   *
+   *   jQuery: the jQuery object to use;
+   */
+  var set = function (k, v) {
+    if (k === "jQuery") {
+      my_jQuery = v;
+    }
+  };
+
   var new_instance = function (root) {
-    var my_jQuery   = jQuery;
     var c_handlers  = {};
     var core_events = { "async_done": [],
                         "async_fail": [],
                         "widget_load": []
                       };
-
-    /* Defines internal parameters of the prelude class. Currently these
-     * are available:
-     *
-     *   jQuery: the jQuery object to use;
-     */
-    var set = function (k, v) {
-      if (k === "jQuery") {
-        my_jQuery = v;
-      }
-    };
 
     var emit = function (signal, args) {
       var handlers = core_events[signal] || [];
@@ -53,7 +54,7 @@ var PRELUDE = (function () {
     };
 
     var slot = function (signal, f) {
-      root.bind(signal, f);
+      root.bind(signal + ".prelude", f);
     };
 
     var render_handler = function (options) {
@@ -245,6 +246,10 @@ var PRELUDE = (function () {
       emit("widget_load", [w, target]);
     };
 
+    var undeploy = function () {
+      root.unbind(".prelude");
+    };
+
     // core event handlers
     core_events["async_done"].push(function (json) {
       if (json.request.target && json.request.source) {
@@ -261,16 +266,15 @@ var PRELUDE = (function () {
       });
     });
 
-    root.bind("submit", submit_handler);
-    root.bind("click", link_handler);
+    root.bind("submit.prelude", submit_handler);
+    root.bind("click.prelude", link_handler);
     root.find(".auto-async").each(function () {
       var tag = my_jQuery(this);
       tag_handler(tag, tag);
     });
 
-    return({ "set": set,
-             "deploy": deploy,
-             "ajax": ajax,
+    return({ "ajax": ajax,
+             "undeploy": undeploy,
              "load_widget": load_widget,
              "tag_handler": tag_handler,
              "slot": slot,
@@ -297,7 +301,8 @@ var PRELUDE = (function () {
   };
 
   return({ "deploy": deploy,
-           "instance": instance
+           "instance": instance,
+           "set": set
          });
 
 })();
