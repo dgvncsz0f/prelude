@@ -29,6 +29,11 @@ describe("PRELUDE", function () {
       expect(tag.find).toHaveBeenCalledWith(".auto-async");
     });
 
+    it("should define a new entry on instances", function () {
+      expect(prelude.instance("main")).not.toBe(undefined);
+    });
+
+
   });
 
   describe("PRELUDE.undeploy", function () {
@@ -52,6 +57,11 @@ describe("PRELUDE", function () {
       atag.trigger(evt);
       expect(evt.isDefaultPrevented()).toBe(false);
       expect(jQuery.ajax).not.toHaveBeenCalled();
+    });
+
+    it("should remove from instances", function () {
+      instance.undeploy();
+      expect(prelude.instance("main")).toBe(undefined);
     });
 
   });
